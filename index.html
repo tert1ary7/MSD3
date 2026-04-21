@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Enterprise Topology: God View v3.0</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="command-center">
+        <header class="dashboard-header">
+            <div class="system-meta">
+                <span class="label">INTEGRITY:</span> <span id="sys-status" class="status-ok">NOMINAL</span>
+                <span class="label">UPTIME:</span> <span class="value">99.998%</span>
+            </div>
+            <div class="search-bay">
+                <input type="text" id="global-search" placeholder="FILTER BY ASSET OR HOST ID..." autocomplete="off">
+            </div>
+            <div class="alert-feed">
+                <span class="label">ACTIVE DENIALS:</span> <span id="denial-val" class="value">0</span>
+            </div>
+        </header>
+
+        <main class="viewport">
+            <aside class="host-tower">
+                <div class="section-tag">INFRASTRUCTURE NODES (N=90)</div>
+                <div id="host-stack" class="scroll-stack"></div>
+            </aside>
+
+            <section class="service-matrix">
+                <div class="section-tag">LOGICAL LICENSE POOLS (N=400)</div>
+                <div id="hex-grid" class="grid-container"></div>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
