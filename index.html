@@ -2,35 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Enterprise Topology: God View v3.0</title>
+    <title>God View v3.5: Topology & Dependency</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="command-center">
         <header class="dashboard-header">
-            <div class="system-meta">
-                <span class="label">INTEGRITY:</span> <span id="sys-status" class="status-ok">NOMINAL</span>
-                <span class="label">UPTIME:</span> <span class="value">99.998%</span>
+            <div class="kpi-group">
+                <div class="kpi"><span class="label">AVAILABILITY</span><span id="stat-avail" class="value">--</span></div>
+                <div class="kpi"><span class="label">AT RISK (2/3)</span><span id="stat-risk" class="value">--</span></div>
+                <div class="kpi"><span class="label">HOST HEALTH</span><span id="stat-host" class="value">--</span></div>
             </div>
             <div class="search-bay">
-                <input type="text" id="global-search" placeholder="FILTER BY ASSET OR HOST ID..." autocomplete="off">
+                <input type="text" id="global-search" placeholder="FILTER ASSETS...">
             </div>
             <div class="alert-feed">
-                <span class="label">ACTIVE DENIALS:</span> <span id="denial-val" class="value">0</span>
+                <span class="label">DENIALS:</span> <span id="denial-val" class="value">0</span>
             </div>
         </header>
 
         <main class="viewport">
             <aside class="host-tower">
-                <div class="section-tag">INFRASTRUCTURE NODES (N=90)</div>
+                <div class="section-tag">INFRASTRUCTURE NODES</div>
                 <div id="host-stack" class="scroll-stack"></div>
             </aside>
 
             <section class="service-matrix">
-                <div class="section-tag">LOGICAL LICENSE POOLS (N=400)</div>
+                <div class="section-tag">LOGICAL LICENSE POOLS</div>
                 <div id="hex-grid" class="grid-container"></div>
             </section>
         </main>
+
+        <div id="details-overlay" class="hidden">
+            <div class="details-content">
+                <h3 id="detail-title">ASSET_NAME</h3>
+                <div id="detail-legs" class="leg-report"></div>
+                <button onclick="closeDetails()">CLOSE [ESC]</button>
+            </div>
+        </div>
     </div>
     <script src="app.js"></script>
 </body>
