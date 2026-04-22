@@ -1,150 +1,124 @@
 // --- System Constraints ---
-const HOST_COUNT = 90;
-const POOL_COUNT = 400;
-const VENDORS = ["MATLAB", "ANSYS", "AUTOCAD", "SOLIDWORKS", "CATIA", "SIEMENS", "FLEXLM", "RLM"];
+const VENDORS = ["MATLAB", "ANSYS", "AUTOCAD", "CATIA", "SIEMENS", "FLEX", "RLM"];
+const state = { hosts: [], pools: [], filter: "", denials: 0 };
 
-const state = {
-    hosts: [],
-    pools: [],
-    denials: 0
-};
-
-// --- Initialization ---
 function init() {
-    // Generate 90 Hosts
-    for (let i = 1; i <= HOST_COUNT; i++) {
-        state.hosts.push({
-            id: `SRV-${String(i).padStart(3, '0')}`,
-            status: 'nominal', // nominal, warning, error
-            latency: Math.floor(Math.random() * 5) + 1
-        });
+    // 1. Generate Infrastructure
+    for (let i = 1; i <= 90; i++) {
+        state.hosts.push({ id: `SRV-${String(i).padStart(3, '0')}`, status: 'nominal', latency: 2 });
     }
 
-    // Generate 400 Pools with Dependency Mapping
-    for (let i = 0; i < POOL_COUNT; i++) {
+    // 2. Generate Pools
+    for (let i = 0; i < 400; i++) {
         const vendor = VENDORS[Math.floor(Math.random() * VENDORS.length)];
-        const isTriad = Math.random() > 0.3;
-        const poolHosts = [];
-        
-        // Assign 1 or 3 random hosts
-        const count = isTriad ? 3 : 1;
-        for (let j = 0; j < count; j++) {
-            poolHosts.push(state.hosts[Math.floor(Math.random() * HOST_COUNT)].id);
-        }
-
+        const isTriad = Math.random() > 0.2;
         state.pools.push({
-            id: `${vendor}-${i}`,
+            id: `${vendor}-${1000 + i}`,
             vendor: vendor,
             isTriad: isTriad,
-            hostRefs: poolHosts,
+            hostRefs: Array.from({length: isTriad ? 3 : 1}, () => state.hosts[Math.floor(Math.random() * 90)].id),
             status: 'nominal'
         });
     }
 
-    render();
+    initialRender();
     setupEvents();
-    setInterval(tick, 2000); // System heartbeat
+    setInterval(tick, 2000);
 }
 
-// --- Logic: Quorum Calculation ---
-function updatePoolStates() {
-    state.pools.forEach(pool => {
-        const activeHosts = pool.hostRefs.filter(hId => {
-            const h = state.hosts.find(host => host.id === hId);
-            return h.status === 'nominal';
-        }).length;
-
-        if (pool.isTriad) {
-            if (activeHosts === 3) pool.status = 'nominal';
-            else if (activeHosts === 2) pool.status = 'degraded';
-            else pool.status = 'critical';
-        } else {
-            pool.status = activeHosts === 1 ? 'nominal' : 'critical';
-        }
-    });
-}
-
-// --- View: Rendering ---
-function render() {
-    updatePoolStates();
+function initialRender() {
     const hostStack = document.getElementById('host-stack');
     const hexGrid = document.getElementById('hex-grid');
-    
-    hostStack.innerHTML = '';
-    hexGrid.innerHTML = '';
 
-    // Render Hosts (Infrastructure)
     state.hosts.forEach(h => {
-        const el = document.createElement('div');
-        el.className = `host-node ${h.status === 'error' ? 'error' : ''} ${h.status === 'warning' ? 'latency' : ''}`;
-        el.id = h.id;
-        el.innerHTML = `<span>${h.id}</span><span>${h.latency}ms</span>`;
-        el.onmouseenter = () => traceHost(h.id);
-        el.onmouseleave = clearTrace;
-        hostStack.appendChild(el);
+        const div = document.createElement('div');
+        div.className = 'host-node nominal';
+        div.id = `node-${h.id}`;
+        div.innerHTML = `<span>${h.id}</span><span class="lat">${h.latency}ms</span>`;
+        hostStack.appendChild(div);
     });
 
-    // Render Hexes (Services)
     state.pools.forEach(p => {
-        const el = document.createElement('div');
-        el.className = `hex ${p.status}`;
-        el.id = p.id;
-        el.dataset.search = `${p.id} ${p.vendor}`.toLowerCase();
-        el.innerHTML = `<span>${p.vendor.substring(0, 3)}</span><span>${p.id.split('-')[1]}</span>`;
-        el.onmouseenter = () => tracePool(p);
-        el.onmouseleave = clearTrace;
-        hexGrid.appendChild(el);
+        const hex = document.createElement('div');
+        hex.className = `hex nominal`;
+        hex.id = `hex-${p.id}`;
+        hex.innerHTML = `<span>${p.vendor.substring(0,3)}</span>`;
+        hex.onclick = () => showDetails(p);
+        hexGrid.appendChild(hex);
     });
 }
 
-// --- Trace Interactions ---
-function traceHost(hostId) {
-    const affectedPools = state.pools.filter(p => p.hostRefs.includes(hostId));
-    document.querySelectorAll('.hex').forEach(el => el.classList.add('dimmed'));
-    affectedPools.forEach(p => document.getElementById(p.id).classList.remove('dimmed'));
+function tick() {
+    // Inject Entropy
+    if (Math.random() > 0.6) {
+        const h = state.hosts[Math.floor(Math.random() * 90)];
+        h.status = Math.random() > 0.8 ? 'error' : 'warning';
+        h.latency = h.status === 'error' ? 999 : 45;
+        setTimeout(() => { h.status = 'nominal'; h.latency = 2; }, 6000);
+    }
+
+    // Update States without rebuilding DOM
+    updateLogic();
 }
 
-function tracePool(pool) {
-    document.querySelectorAll('.host-node').forEach(el => el.classList.add('dimmed'));
-    pool.hostRefs.forEach(hId => {
-        const el = document.getElementById(hId);
-        el.classList.remove('dimmed');
-        el.classList.add('active-trace');
+function updateLogic() {
+    let downServices = 0;
+    let riskServices = 0;
+
+    state.pools.forEach(p => {
+        const activeCount = p.hostRefs.filter(hId => state.hosts.find(h => h.id === hId).status === 'nominal').length;
+        const el = document.getElementById(`hex-${p.id}`);
+        
+        if (p.isTriad) {
+            if (activeCount === 3) el.className = 'hex nominal';
+            else if (activeCount === 2) { el.className = 'hex degraded'; riskServices++; }
+            else { el.className = 'hex critical'; downServices++; }
+        } else {
+            if (activeCount === 1) el.className = 'hex nominal';
+            else { el.className = 'hex critical'; downServices++; }
+        }
+
+        // Apply Search Persistence
+        const isMatch = p.id.toLowerCase().includes(state.filter);
+        el.style.display = isMatch ? 'flex' : 'none';
     });
-}
 
-function clearTrace() {
-    document.querySelectorAll('.dimmed, .active-trace').forEach(el => {
-        el.classList.remove('dimmed', 'active-trace');
+    // Update Host Nodes
+    state.hosts.forEach(h => {
+        const el = document.getElementById(`node-${h.id}`);
+        el.className = `host-node ${h.status}`;
+        el.querySelector('.lat').innerText = `${h.latency}ms`;
     });
+
+    // Update KPIs
+    document.getElementById('stat-avail').innerText = `${(((400 - downServices) / 400) * 100).toFixed(2)}%`;
+    document.getElementById('stat-risk').innerText = riskServices;
+    document.getElementById('stat-host').innerText = `${state.hosts.filter(h => h.status === 'nominal').length}/90`;
 }
 
-// --- Search Filter ---
 function setupEvents() {
     document.getElementById('global-search').addEventListener('input', (e) => {
-        const val = e.target.value.toLowerCase();
-        document.querySelectorAll('.hex').forEach(el => {
-            el.style.display = el.dataset.search.includes(val) ? 'flex' : 'none';
-        });
+        state.filter = e.target.value.toLowerCase();
+        updateLogic();
     });
 }
 
-// --- Heartbeat: Simulating Entropy ---
-function tick() {
-    // Randomly break a host
-    if (Math.random() > 0.7) {
-        const h = state.hosts[Math.floor(Math.random() * HOST_COUNT)];
-        h.status = Math.random() > 0.5 ? 'error' : 'warning';
-        h.latency = h.status === 'error' ? 999 : Math.floor(Math.random() * 50) + 10;
-        
-        // Auto-heal after some time
-        setTimeout(() => {
-            h.status = 'nominal';
-            h.latency = Math.floor(Math.random() * 5) + 1;
-            render();
-        }, 8000);
-    }
-    render();
+function showDetails(pool) {
+    const overlay = document.getElementById('details-overlay');
+    const title = document.getElementById('detail-title');
+    const legs = document.getElementById('detail-legs');
+    
+    title.innerText = pool.id;
+    legs.innerHTML = pool.hostRefs.map(hId => {
+        const host = state.hosts.find(h => h.id === hId);
+        return `<div class="leg-row"><span>${hId}</span><span style="color:${host.status === 'nominal' ? 'var(--state-ok)' : 'var(--state-fail)'}">${host.status.toUpperCase()}</span></div>`;
+    }).join('');
+    
+    overlay.classList.remove('hidden');
+}
+
+function closeDetails() {
+    document.getElementById('details-overlay').classList.add('hidden');
 }
 
 init();
