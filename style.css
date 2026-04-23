@@ -10,44 +10,96 @@
     --highlight: #ffffff;
 }
 
-body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; }
-.command-center { display: flex; flex-direction: column; height: 100vh; padding: 12px; }
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    overflow: hidden;
+}
 
-/* KPI Styling */
-.kpi-group { display: flex; gap: 20px; }
+.command-center {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+/* Header & KPIs */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 15px;
+    background: var(--panel);
+}
+
+.kpi-group { display: flex; gap: 30px; }
 .kpi { display: flex; flex-direction: column; }
-.label { font-size: 9px; font-weight: 800; color: #444; letter-spacing: 1px; }
-.value { color: #fff; font-family: monospace; font-size: 14px; }
+.label { font-size: 9px; font-weight: 800; color: #4b4b4b; letter-spacing: 1px; margin-bottom: 2px; }
+.value { color: #fff; font-family: 'Courier New', monospace; font-size: 16px; font-weight: bold; }
 
-/* Search Filter Stability */
-#global-search { background: #000; border: 1px solid var(--border); color: #fff; padding: 8px; width: 250px; outline: none; }
+#global-search {
+    background: #000;
+    border: 1px solid var(--border);
+    color: #fff;
+    padding: 8px 15px;
+    width: 280px;
+    font-family: monospace;
+    outline: none;
+    transition: border-color 0.3s;
+}
 #global-search:focus { border-color: var(--state-ok); }
 
-/* Host Node - Semantic Color */
+/* Main Viewport */
+.viewport { display: flex; flex-grow: 1; gap: 15px; overflow: hidden; }
+
+/* Host Stack (The Infrastructure) */
+.host-tower { width: 240px; display: flex; flex-direction: column; border-right: 1px solid var(--border); }
+.section-tag { font-size: 10px; font-weight: 900; color: #3f3f46; margin-bottom: 10px; letter-spacing: 2px; }
+.scroll-stack { flex-grow: 1; overflow-y: auto; padding-right: 8px; display: flex; flex-direction: column; gap: 4px; }
+
 .host-node { 
-    background: #000; border: 1px solid var(--border); padding: 6px 10px; 
-    font-size: 10px; display: flex; justify-content: space-between; transition: 0.3s;
-    border-left: 3px solid var(--state-ok-dim);
+    background: #0a0a0c; 
+    border: 1px solid var(--border); 
+    padding: 6px 10px; 
+    font-size: 11px; 
+    display: flex; 
+    justify-content: space-between; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 3px solid transparent;
 }
-.host-node.nominal { border-left-color: var(--state-ok); background: #06201644; }
-.host-node.error { border-left-color: var(--state-fail); background: #450a0a; order: -1; animation: strobe 2s infinite; }
-.host-node.warning { border-left-color: var(--state-warn); background: #451a03; order: 0; }
+.host-node.nominal { border-left-color: var(--state-ok); background: #06201633; color: #a7f3d0; }
+.host-node.warning { border-left-color: var(--state-warn); background: #451a03; color: #fed7aa; order: 0; }
+.host-node.error { border-left-color: var(--state-fail); background: #450a0a; color: #fecaca; order: -1; animation: alert-flash 2s infinite; }
 
-/* Hex Logic */
+/* Hex Grid (The Services) */
+.service-matrix { flex-grow: 1; overflow-y: auto; }
+.grid-container { display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; }
+
 .hex {
-    width: 38px; height: 44px; background: #111;
+    width: 42px; height: 48px; 
+    background: #111;
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    display: flex; align-items: center; justify-content: center; font-size: 8px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; 
+    font-size: 9px; font-weight: bold; cursor: pointer; transition: 0.2s;
 }
-.hex.nominal { background: var(--state-ok-dim); color: var(--state-ok); }
+.hex:hover { filter: brightness(1.5); transform: scale(1.1); z-index: 10; }
+.hex.nominal { background: var(--state-ok-dim); color: var(--state-ok); border: 1px solid #064e3b; }
 .hex.degraded { background: var(--state-warn); color: #000; }
-.hex.critical { background: var(--state-fail); color: #fff; }
+.hex.critical { background: var(--state-fail); color: #fff; animation: alert-flash 1s infinite; }
 
-/* Details Overlay */
-#details-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-.details-content { background: var(--panel); border: 1px solid var(--border); padding: 30px; min-width: 400px; text-align: center; }
-.leg-report { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
-.leg-row { display: flex; justify-content: space-between; padding: 10px; background: #000; border: 1px solid #333; }
+/* Overlay UI */
+#details-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
+.details-content { background: var(--panel); border: 1px solid var(--border); padding: 30px; width: 450px; box-shadow: 0 0 50px rgba(0,0,0,1); }
+.details-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 15px; }
+.details-meta { font-size: 11px; color: #555; margin-bottom: 20px; }
+.leg-report { display: flex; flex-direction: column; gap: 8px; }
+.leg-row { display: flex; justify-content: space-between; padding: 12px; background: #000; border: 1px solid #222; font-family: monospace; }
+.close-btn { background: #e11d48; color: white; border: none; padding: 5px 10px; cursor: pointer; font-size: 10px; font-weight: bold; }
 .hidden { display: none !important; }
 
-@keyframes strobe { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+@keyframes alert-flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
