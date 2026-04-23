@@ -2,22 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>God View v3.5: Topology & Dependency</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>God View v3.5 | Systems Topology</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="command-center">
         <header class="dashboard-header">
             <div class="kpi-group">
-                <div class="kpi"><span class="label">AVAILABILITY</span><span id="stat-avail" class="value">--</span></div>
-                <div class="kpi"><span class="label">AT RISK (2/3)</span><span id="stat-risk" class="value">--</span></div>
-                <div class="kpi"><span class="label">HOST HEALTH</span><span id="stat-host" class="value">--</span></div>
+                <div class="kpi">
+                    <span class="label">AVAILABILITY</span>
+                    <span id="stat-avail" class="value">--</span>
+                </div>
+                <div class="kpi">
+                    <span class="label">REDUNDANCY RISK</span>
+                    <span id="stat-risk" class="value">--</span>
+                </div>
+                <div class="kpi">
+                    <span class="label">HOST NODES</span>
+                    <span id="stat-host" class="value">--</span>
+                </div>
             </div>
+
             <div class="search-bay">
-                <input type="text" id="global-search" placeholder="FILTER ASSETS...">
+                <input type="text" id="global-search" placeholder="FILTER ASSETS (e.g. MATLAB)..." autocomplete="off">
             </div>
+
             <div class="alert-feed">
-                <span class="label">DENIALS:</span> <span id="denial-val" class="value">0</span>
+                <span class="label">REAL-TIME DENIALS:</span>
+                <span id="denial-val" class="value">0</span>
             </div>
         </header>
 
@@ -35,9 +48,18 @@
 
         <div id="details-overlay" class="hidden">
             <div class="details-content">
-                <h3 id="detail-title">ASSET_NAME</h3>
-                <div id="detail-legs" class="leg-report"></div>
-                <button onclick="closeDetails()">CLOSE [ESC]</button>
+                <div class="details-header">
+                    <h3 id="detail-title">ASSET_ID</h3>
+                    <button class="close-btn" onclick="closeDetails()">CLOSE [ESC]</button>
+                </div>
+                <div class="details-meta">
+                    <span id="detail-vendor">VENDOR</span> | <span id="detail-type">TRIAD</span>
+                </div>
+                <div id="detail-legs" class="leg-report">
+                    </div>
+                <div class="details-footer">
+                    * STATUS REFLECTS REAL-TIME QUORUM STATE
+                </div>
             </div>
         </div>
     </div>
